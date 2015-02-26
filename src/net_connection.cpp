@@ -44,10 +44,10 @@ void CNetConnection::OnCreateConnection()
 	packet.net_conn_id = get_net_conn_id();
 	packet.data = nullptr;
 	packet.data_size = 0;
-	m_net_peer->get_net_stream()->AddNetPacket( packet );
+	m_net_peer->get_net_stream()->OnPacketArrived( packet );
 }
 
-void CNetConnection::OnReceivedMessage( uint8_t* _data, size_t _length )
+void CNetConnection::OnReceivedMessage( uint8_t* _data, uint32_t _length )
 {
 	NetStreamPacket packet;
 	packet.packet_type = MESSAGE_TYPE_MESSAGE;
@@ -55,7 +55,7 @@ void CNetConnection::OnReceivedMessage( uint8_t* _data, size_t _length )
 	packet.net_conn_id = get_net_conn_id();
 	packet.data = _data;
 	packet.data_size = _length;
-	m_net_peer->get_net_stream()->AddNetPacket( packet );
+	m_net_peer->get_net_stream()->OnPacketArrived( packet );
 }
 
 void CNetConnection::OnDestroyConnection()
@@ -66,7 +66,7 @@ void CNetConnection::OnDestroyConnection()
 	packet.net_conn_id = get_net_conn_id();
 	packet.data = nullptr;
 	packet.data_size = 0;
-	m_net_peer->get_net_stream()->AddNetPacket( packet );
+	m_net_peer->get_net_stream()->OnPacketArrived( packet );
 }
 
 void CNetConnection::CreateConnection()

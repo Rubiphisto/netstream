@@ -328,7 +328,7 @@ void OnRecvMessage( netstream_t _netstream, const NetStreamPacket _packet )
 		char content[MAX_CHAT_CONTENT];
 		uint32_t size() const
 		{
-			return sizeof( ChatMessage ) - ( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) );
+			return (uint32_t)( sizeof( ChatMessage )-( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) ) );
 		}
 	};
 	ChatMessage message;
@@ -345,7 +345,7 @@ void OnRecvMessage( netstream_t _netstream, const NetStreamPacket _packet )
 void thread_func()
 {
 	printf( "enter thread!\n" );
-	netstream_t netstream = netstream_create();
+	netstream_t netstream = netstream_create( nullptr );
 	NetPeerId peer_id = netstream_listen( netstream, "", 7234 );
 	if( 0 == peer_id )
 		return;

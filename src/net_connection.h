@@ -36,7 +36,7 @@ public:
 	static void event_cb( struct bufferevent* _bev, short _events, void* _ctx );
 private:
 	void OnCreateConnection();
-	void OnReceivedMessage( uint8_t* _data, size_t _length );
+	void OnReceivedMessage( uint8_t* _data, uint32_t _length );
 	void OnDestroyConnection();
 
 	void RaisedError();

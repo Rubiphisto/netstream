@@ -11,9 +11,13 @@
 
 struct netstream : public CNetStream
 {
+	netstream( PacketArrivedHandler _handler )
+		: CNetStream( _handler )
+	{
+	}
 };
 
-netstream_t netstream_create()
+netstream_t netstream_create( PacketArrivedHandler _handler )
 {
 #ifdef WIN32
 	uint16_t version = MAKEWORD( 2, 2 );
@@ -25,7 +29,7 @@ netstream_t netstream_create()
 #else
 	evthread_use_pthreads();
 #endif
-	return new netstream;
+	return new netstream( _handler );
 }
 
 NetPeerId netstream_listen( netstream_t _net_stream, const char* _local_addr, uint16_t _port )
@@ -74,10 +78,18 @@ void netstream_destroy(netstream_t _net_stream)
 	delete _net_stream;
 }
 
-CNetStream::CNetStream()
+void DefaultPacketArrivedHandler( netstream_t _net_stream, const NetStreamPacket& _packet )
+{
+	_net_stream->AddNetPacket( _packet );
+}
+
+CNetStream::CNetStream( PacketArrivedHandler _handler )
 	: m_max_conn_id( 0 )
 	, m_max_peer_id( 0 )
+	, m_packet_arrived_handler( _handler )
 {
+	if( nullptr == m_packet_arrived_handler )
+		m_packet_arrived_handler = DefaultPacketArrivedHandler;
 }
 
 CNetStream::~CNetStream()
@@ -151,7 +163,12 @@ void CNetStream::Shutdown()
 	m_peers.clear();
 }
 
-void CNetStream::AddNetPacket( struct NetStreamPacket& _packet )
+void CNetStream::OnPacketArrived( const NetStreamPacket& _packet )
+{
+	m_packet_arrived_handler( (netstream_t)this, _packet );
+}
+
+void CNetStream::AddNetPacket( const NetStreamPacket& _packet )
 {
 	m_message_list.PushMessage( _packet );
 }

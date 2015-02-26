@@ -48,7 +48,7 @@ void OnRecvMessage( const NetStreamPacket _packet )
 void thread_func()
 {
 	printf( "enter thread!\n" );
-	netstream_t netstream = netstream_create();
+	netstream_t netstream = netstream_create( nullptr );
 	NetPeerId peer_id = netstream_connect( netstream, "127.0.0.1", 7234 );
 	if( 0 == peer_id )
 		return;
@@ -59,7 +59,7 @@ void thread_func()
 		std::string value;
 		while( GetSending( value ) )
 		{
-			netstream_send( netstream, conn_id, value.c_str(), value.size() + 1 );
+			netstream_send( netstream, conn_id, value.c_str(), (uint32_t)value.size() + 1 );
 		}
 		// recv
 		NetStreamPacket packet;
