@@ -41,7 +41,8 @@ void OnRecvMessage( const NetStreamPacket _packet )
 		char content[MAX_CHAT_CONTENT];
 	};
 	ChatMessage* message = (ChatMessage*)_packet.data;
-	printf( "[%u] said: %s\n", message->user_id, message->content );
+	//printf( "[%u] said: %s\n", message->user_id, message->content );
+	printf( "[%u] said something: %d/%d\n", message->user_id, strlen( message->content ), _packet.data_size );
 }
 
 void thread_func()
