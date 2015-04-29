@@ -14,7 +14,7 @@ typedef std::shared_ptr<CNetConnection> CNetConnectionPtr;
 class CNetStream
 {
 public:
-	CNetStream( PacketArrivedHandler _handler );
+	CNetStream( PacketArrivedHandler _handler, uint64_t _param );
 	~CNetStream();
 
 	void Shutdown();
@@ -46,5 +46,6 @@ private:
 	NetPeerId			m_max_peer_id;
 	CMessageList		m_message_list;
 	PacketArrivedHandler	m_packet_arrived_handler;
+	uint64_t				m_param_with_handler;
 };
 

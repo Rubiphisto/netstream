@@ -35,9 +35,9 @@ struct NetStreamPacket
 	uint8_t*	data;
 };
 
-typedef void( *PacketArrivedHandler )( netstream_t _net_stream, const NetStreamPacket& _packet );
+typedef void( *PacketArrivedHandler )( netstream_t, const NetStreamPacket&, uint64_t );
 
-LIBNETSTREAM_API netstream_t netstream_create( PacketArrivedHandler _handler );
+LIBNETSTREAM_API netstream_t netstream_create( PacketArrivedHandler _handler, uint64_t _param );
 LIBNETSTREAM_API NetPeerId netstream_listen( netstream_t _net_stream, const char* _local_addr, uint16_t _port );
 LIBNETSTREAM_API NetPeerId netstream_connect( netstream_t _net_stream, const char* _remote_addr, uint16_t _port );
 LIBNETSTREAM_API bool netstream_disconnect( netstream_t _net_stream, NetConnId _conn_id );

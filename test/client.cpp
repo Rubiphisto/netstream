@@ -48,8 +48,8 @@ void OnRecvMessage( const NetStreamPacket _packet )
 void thread_func()
 {
 	printf( "enter thread!\n" );
-	netstream_t netstream = netstream_create( nullptr );
-	NetPeerId peer_id = netstream_connect( netstream, "127.0.0.1", 7234 );
+	netstream_t netstream = netstream_create( nullptr, 0 );
+	NetPeerId peer_id = netstream_connect( netstream, "127.0.0.1", 7000 );
 	if( 0 == peer_id )
 		return;
 	NetConnId conn_id = 0;
