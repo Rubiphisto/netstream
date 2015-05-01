@@ -4,6 +4,8 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/event.h>
+#include <string.h>
+#include <exception>
 
 #include "net_stream.h"
 #include "net_connection.h"
@@ -109,7 +111,7 @@ void CNetServer::Terminate()
 bool CNetServer::CreateConnection( event_base* _base, evutil_socket_t _fd )
 {
 	if( get_event_base() != _base )
-		throw std::exception( "Unmatch event_base" );
+		throw std::invalid_argument( "Unmatch event_base" );
 	CNetConnection* conn = new CNetConnection();
 	if( nullptr == conn )
 		return false;

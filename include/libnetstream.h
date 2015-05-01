@@ -6,15 +6,23 @@
 extern "C" {
 #endif // __cplusplus
 
-#ifdef LIBNETSTREAM_DLL
-#   ifdef LIBNETSTREAM_EXPORT
-#       define LIBNETSTREAM_API __declspec(dllexport)
-#   else
-#       define LIBNETSTREAM_API __declspec(dllimport)
-#   endif
-#else // LIBNETSTREAM_DLL
-#   define LIBNETSTREAM_API
-#endif // LIBNETSTREAM_DLL
+#if defined _WIN32 || defined __CYGWIN__
+#	ifdef LIBNETSTREAM_DLL
+#		ifdef LIBNETSTREAM_EXPORT
+#			define LIBNETSTREAM_API __declspec(dllexport)
+#		else
+#			define LIBNETSTREAM_API __declspec(dllimport)
+#		endif
+#	else // LIBNETSTREAM_DLL
+#		define LIBNETSTREAM_API
+#	endif // LIBNETSTREAM_DLL
+#else
+#	if __GUNC__ >= 4
+#		define LIBNETSTREAM_API __attribute__ ((visibility("default")))
+#	else
+#		define LIBNETSTREAM_API
+#	endif
+#endif
 
 struct netstream;
 typedef struct netstream* netstream_t;

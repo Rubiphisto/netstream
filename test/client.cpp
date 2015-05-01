@@ -4,6 +4,7 @@
 #include <queue>
 #include <string>
 #include <mutex>
+#include <string.h>
 #include "libnetstream.h"
 
 #if defined( _WINDOWS )

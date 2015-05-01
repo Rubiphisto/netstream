@@ -23,7 +23,7 @@ if (MSVC)
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_LEVEL}")
 	endif ()
 elseif(CMAKE_COMPILER_IS_GNUCXX)
-	add_definitions(-Wall -Wno-long-long -pedantic)
+	add_definitions(-Wall -Wno-long-long -pedantic ${CMAKE_CXX_FLAGS})
 endif ()
 
 add_library(${PROJECTNAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})

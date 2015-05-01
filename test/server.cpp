@@ -1,5 +1,6 @@
 #include <stdint.h>
-#include <conio.h>
+#include <string.h>
+#include <cstdarg>
 #include <list>
 #include <iostream>
 #include <algorithm>
@@ -102,10 +103,6 @@ public:
 	{
 		mData = formater<32>( "%I64u", v );
 	}
-	CAnyString( DWORD v )
-	{
-		mData = formater<32>( "%u", v );
-	}
 	CAnyString( float v )
 	{
 		mData = formater<32>( "%f", v );
@@ -146,10 +143,6 @@ public:
 	CAnyString& operator=( uint64_t v )
 	{
 		mData = formater<32>( "%I64u", v ); return *this;
-	}
-	CAnyString& operator=( DWORD v )
-	{
-		mData = formater<32>( "%u", v ); return *this;
 	}
 	CAnyString& operator=( float v )
 	{
@@ -199,15 +192,11 @@ public:
 	}
 	operator int64_t() const
 	{
-		return (int64_t)_strtoi64( mData.c_str(), 0, 0 );
+		return (int64_t)strtoll( mData.c_str(), 0, 0 );
 	}
 	operator uint64_t() const
 	{
-		return (uint64_t)_strtoui64( mData.c_str(), 0, 0 );
-	}
-	operator DWORD() const
-	{
-		return strtoul( mData.c_str(), 0, 0 );
+		return (uint64_t)strtoull( mData.c_str(), 0, 0 );
 	}
 	operator float() const
 	{

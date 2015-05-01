@@ -3,6 +3,7 @@
 
 #include <event2/thread.h>
 #include <list>
+#include <algorithm>
 
 #include "net_peer.h"
 #include "net_server.h"
