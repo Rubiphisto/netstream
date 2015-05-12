@@ -7,10 +7,10 @@
 
 
 CNetPeer::CNetPeer( CNetStream* _net_stream )
-	: m_net_stream( _net_stream )
+	: m_peer_id( _net_stream->BuildNewPeerId() )
+	, m_net_stream( _net_stream )
 	, m_event_base( nullptr )
 	, m_execution_status( eExecutionStatus::Scratch )
-	, m_peer_id( _net_stream->BuildNewPeerId() )
 {
 }
 
