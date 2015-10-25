@@ -20,9 +20,9 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 add_executable(${PROJECTNAME} ${HEADER_FILES} ${SOURCE_FILES})
 
 if (MSVC)
-	target_link_libraries(demo_server libnetstream)
+	target_link_libraries(demo_server netstream)
 elseif (UNIX)
-	target_link_libraries(demo_server libnetstream)
+	target_link_libraries(demo_server netstream)
 endif ()
 
 # 
@@ -46,7 +46,7 @@ link_directories(${CMAKE_SOURCE_DIR}/lib)
 add_executable(${PROJECTNAME} ${HEADER_FILES} ${SOURCE_FILES})
 
 if (MSVC)
-	target_link_libraries(${PROJECTNAME} libnetstream)
+	target_link_libraries(${PROJECTNAME} netstream)
 elseif (UNIX)
-	target_link_libraries(${PROJECTNAME} libnetstream)
+	target_link_libraries(${PROJECTNAME} netstream)
 endif ()

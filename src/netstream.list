@@ -1,0 +1,19 @@
+set (HEADER_FILES
+	stdafx.h
+	${CMAKE_SOURCE_DIR}/include/libnetstream.h
+	net_stream.h
+	net_peer.h
+	net_server.h
+	net_client.h
+	net_connection.h
+	message_list.h
+)
+set (SOURCE_FILES
+	net_stream.cpp
+	net_peer.cpp
+	net_server.cpp
+	net_client.cpp
+	net_connection.cpp
+	message_list.cpp
+)
+
