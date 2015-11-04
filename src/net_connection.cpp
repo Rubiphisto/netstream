@@ -103,7 +103,7 @@ int32_t CNetConnection::WriteData( const void* _data, uint32_t _size )
 
 void CNetConnection::RaisedError()
 {
-	perror( "Error from bufferevent" );
+	printf( "[netstream]Something goes wrong: %s\n", evutil_socket_error_to_string( EVUTIL_SOCKET_ERROR() ) );
 }
 
 void CNetConnection::read_cb( bufferevent* _bev, void *_ctx )
@@ -129,10 +129,12 @@ void CNetConnection::read_cb( bufferevent* _bev, void *_ctx )
 void CNetConnection::event_cb( bufferevent* /*_bev*/, short _events, void* _ctx )
 {
 	CNetConnection* conn = (CNetConnection*)_ctx;
-	if( _events & BEV_EVENT_ERROR )
-		conn->RaisedError();
-	else if( _events & ( BEV_EVENT_EOF | BEV_EVENT_ERROR ) )
+	if( _events & ( BEV_EVENT_EOF | BEV_EVENT_ERROR ) )
+	{
+		if( _events & BEV_EVENT_ERROR )
+			conn->RaisedError();
 		conn->CloseConnection();
+	}
 	else if( _events & BEV_EVENT_CONNECTED )
 		conn->CreateConnection();
 }
