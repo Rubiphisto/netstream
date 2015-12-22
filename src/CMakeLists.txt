@@ -26,7 +26,11 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 	add_definitions(-Wall -Wno-long-long -pedantic ${CMAKE_CXX_FLAGS})
 endif ()
 
-add_library(${PROJECTNAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
+if( NETSTREAM_NO_SHARED_LIB )
+	add_library(${PROJECTNAME} STATIC ${HEADER_FILES} ${SOURCE_FILES})
+else()
+	add_library(${PROJECTNAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
+endif()
 
 find_package(LibEvent)
 
