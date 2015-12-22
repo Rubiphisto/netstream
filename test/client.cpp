@@ -38,12 +38,12 @@ void OnRecvMessage( const NetStreamPacket _packet )
 {
 	struct ChatMessage
 	{
-		uint32_t user_id;
+		uint64_t user_id;
 		char content[MAX_CHAT_CONTENT];
 	};
 	ChatMessage* message = (ChatMessage*)_packet.data;
 	//printf( "[%u] said: %s\n", message->user_id, message->content );
-	printf( "[%u] said something: %d/%d\n", message->user_id, strlen( message->content ), _packet.data_size );
+	printf( "[%llu] said something: %llu/%u\n", message->user_id, strlen( message->content ), _packet.data_size );
 }
 
 void thread_func()
@@ -73,10 +73,10 @@ void thread_func()
 		{
 		case MESSAGE_TYPE_CONNECTED:
 			conn_id = packet.net_conn_id;
-			printf( "Connected to server, I'm [%u]\n", conn_id );
+			printf( "Connected to server, I'm [%llu]\n", conn_id );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
-			printf( "Disconnected from server, I'm [%u]\n", conn_id );
+			printf( "Disconnected from server, I'm [%llu]\n", conn_id );
 			conn_id = 0;
 			break;
 		case MESSAGE_TYPE_MESSAGE:

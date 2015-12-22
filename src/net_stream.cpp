@@ -239,7 +239,9 @@ void CNetStream::CloseConnectionsOnPeer( NetPeerId _peer_id )
 
 NetConnId CNetStream::BuildNewConnId()
 {
-	return ++m_max_conn_id;
+	int64_t now_time = time( nullptr );
+	++m_max_conn_id;
+	return ( ( now_time & 0x0FFFFFFFF ) << 32 ) | ( m_max_conn_id & 0x0FFFFFFFF );
 }
 
 NetPeerId CNetStream::BuildNewPeerId()

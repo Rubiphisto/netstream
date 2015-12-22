@@ -313,7 +313,7 @@ void OnRecvMessage( netstream_t _netstream, const NetStreamPacket _packet )
 {
 	struct ChatMessage
 	{
-		uint32_t user_id;
+		uint64_t user_id;
 		char content[MAX_CHAT_CONTENT];
 		uint32_t size() const
 		{
@@ -345,11 +345,11 @@ void thread_func()
 		{
 			struct ChatMessage
 			{
-				uint32_t user_id;
+				uint64_t user_id;
 				char content[MAX_CHAT_CONTENT];
 				uint32_t size() const
 				{
-					return sizeof( ChatMessage ) - ( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) );
+					return (uint32_t)( sizeof( ChatMessage ) - ( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) ) );
 				}
 			};
 			ChatMessage message;
@@ -373,7 +373,7 @@ void thread_func()
 		{
 		case MESSAGE_TYPE_CONNECTED:
 			all_connections.push_back( packet.net_conn_id );
-			printf( "A new connection[%u] has arrived.\n", packet.net_conn_id );
+			printf( "A new connection[%llu] has arrived.\n", packet.net_conn_id );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
 			all_connections.remove_if(
@@ -382,10 +382,11 @@ void thread_func()
 				return _conn_id == packet.net_conn_id;
 			}
 			);
-			printf( "A connection[%u] has lost.\n", packet.net_conn_id );
+			printf( "A connection[%llu] has lost.\n", packet.net_conn_id );
 			break;
 		case MESSAGE_TYPE_MESSAGE:
 			OnRecvMessage( netstream, packet );
+			//netstream_disconnect( netstream, packet.net_conn_id );
 			break;
 		}
 		netstream_free_packet( &packet );

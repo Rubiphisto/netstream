@@ -27,7 +27,7 @@ extern "C" {
 struct netstream;
 typedef struct netstream* netstream_t;
 
-typedef uint32_t NetConnId;
+typedef uint64_t NetConnId;
 typedef uint16_t NetPeerId;
 
 const uint8_t MESSAGE_TYPE_CONNECTED = 0;
