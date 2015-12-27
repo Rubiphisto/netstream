@@ -12,13 +12,13 @@
 
 struct netstream : public CNetStream
 {
-	netstream( PacketArrivedHandler _handler, uint64_t _param )
-		: CNetStream( _handler, _param )
+	netstream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
+		: CNetStream( _packet_handler, _errmsg_handler, _param )
 	{
 	}
 };
 
-netstream_t netstream_create( PacketArrivedHandler _handler, uint64_t _param )
+netstream_t netstream_create( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
 {
 #ifdef WIN32
 	uint16_t version = MAKEWORD( 2, 2 );
@@ -30,7 +30,7 @@ netstream_t netstream_create( PacketArrivedHandler _handler, uint64_t _param )
 #else
 	evthread_use_pthreads();
 #endif
-	return new netstream( _handler, _param );
+	return new netstream( _packet_handler, _errmsg_handler, _param );
 }
 
 NetPeerId netstream_listen( netstream_t _net_stream, const char* _local_addr, uint16_t _port )
@@ -73,7 +73,7 @@ int32_t netstream_send( netstream_t _net_stream, NetConnId _conn_id, const void*
 	return _net_stream->SendNetMessage( _conn_id, _data, _size );
 }
 
-void netstream_destroy(netstream_t _net_stream)
+void netstream_destroy( netstream_t _net_stream )
 {
 	_net_stream->Shutdown();
 	delete _net_stream;
@@ -84,14 +84,22 @@ void DefaultPacketArrivedHandler( netstream_t _net_stream, const NetStreamPacket
 	_net_stream->AddNetPacket( _packet );
 }
 
-CNetStream::CNetStream( PacketArrivedHandler _handler, uint64_t _param )
+void DefaultErrorMsgHandler( netstream_t /*_net_stream*/, NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg )
+{
+	printf( "[netstream][PeerId:%u|ConnId:%llu]%s\n", _peer_id, _conn_id, _error_msg );
+}
+
+CNetStream::CNetStream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
 	: m_max_conn_id( 0 )
 	, m_max_peer_id( 0 )
-	, m_packet_arrived_handler( _handler )
+	, m_packet_arrived_handler( _packet_handler )
+	, m_errmsg_handler( _errmsg_handler )
 	, m_param_with_handler( _param )
 {
 	if( nullptr == m_packet_arrived_handler )
 		m_packet_arrived_handler = DefaultPacketArrivedHandler;
+	if( nullptr == m_errmsg_handler )
+		m_errmsg_handler = DefaultErrorMsgHandler;
 }
 
 CNetStream::~CNetStream()
@@ -148,26 +156,31 @@ void CNetStream::Shutdown()
 {
 	std::for_each( m_peers.begin(), m_peers.end(),
 		[]( const PeersList::value_type& _value )
-		{
-			_value.second->Stop();
-			return true;
-		}
+	{
+		_value.second->Stop();
+		return true;
+	}
 	);
 	std::for_each( m_peers.begin(), m_peers.end(),
 		[]( const PeersList::value_type& _value )
-		{
-			CNetPeer* peer = _value.second;
-			peer->Uninitialize();
-			delete peer;
-			return true;
-		}
+	{
+		CNetPeer* peer = _value.second;
+		peer->Uninitialize();
+		delete peer;
+		return true;
+	}
 	);
 	m_peers.clear();
 }
 
 void CNetStream::OnPacketArrived( const NetStreamPacket& _packet )
 {
-	m_packet_arrived_handler( (netstream_t)this, _packet, m_param_with_handler );
+	m_packet_arrived_handler( ( netstream_t )this, _packet, m_param_with_handler );
+}
+
+void CNetStream::OnErrorMessage( NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg )
+{
+	m_errmsg_handler( ( netstream_t )this, _peer_id, _conn_id, _error_msg );
 }
 
 void CNetStream::AddNetPacket( const NetStreamPacket& _packet )
@@ -222,18 +235,18 @@ void CNetStream::CloseConnectionsOnPeer( NetPeerId _peer_id )
 		std::lock_guard<std::mutex> lock( m_connection_mutex );
 		std::for_each( m_connections.begin(), m_connections.end(),
 			[&list, _peer_id]( const ConnectionsList::value_type& _value )
-			{
-				CNetConnectionPtr connection = _value.second;
-				if( connection->get_net_peer_id() == _peer_id )
-					list.push_back( connection );
-			}
+		{
+			CNetConnectionPtr connection = _value.second;
+			if( connection->get_net_peer_id() == _peer_id )
+				list.push_back( connection );
+		}
 		);
 	}
 	std::for_each( list.begin(), list.end(),
 		[]( CNetConnectionPtr _conn )
-		{
-			_conn->CloseConnection();
-		}
+	{
+		_conn->CloseConnection();
+	}
 	);
 }
 

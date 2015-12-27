@@ -1,4 +1,4 @@
-#include <stdint.h>
+﻿#include <stdint.h>
 #include <string.h>
 #include <cstdarg>
 #include <list>
@@ -334,7 +334,7 @@ void OnRecvMessage( netstream_t _netstream, const NetStreamPacket _packet )
 void thread_func()
 {
 	printf( "enter thread!\n" );
-	netstream_t netstream = netstream_create( nullptr, 0 );
+	netstream_t netstream = netstream_create( nullptr, nullptr, 0 );
 	NetPeerId peer_id = netstream_listen( netstream, "", 7000 );
 	if( 0 == peer_id )
 		return;

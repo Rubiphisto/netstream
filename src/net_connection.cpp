@@ -101,9 +101,16 @@ int32_t CNetConnection::WriteData( const void* _data, uint32_t _size )
 	return 0;
 }
 
+#define MAX_ERR_MSG_LEN 1024
 void CNetConnection::RaisedError()
 {
-	printf( "[netstream]Something goes wrong: %s\n", evutil_socket_error_to_string( EVUTIL_SOCKET_ERROR() ) );
+	char err_msg[MAX_ERR_MSG_LEN];
+	snprintf( err_msg
+		, MAX_ERR_MSG_LEN - 1
+		, "Something goes wrong: %s"
+		, evutil_socket_error_to_string( EVUTIL_SOCKET_ERROR() ) );
+	err_msg[MAX_ERR_MSG_LEN - 1] = 0;
+	m_net_peer->get_net_stream()->OnErrorMessage( m_net_peer->get_peer_id(), get_net_conn_id(), err_msg );
 }
 
 void CNetConnection::read_cb( bufferevent* _bev, void *_ctx )

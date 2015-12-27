@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "net_server.h"
 
 #include <event2/bufferevent.h>
@@ -135,14 +135,20 @@ void CNetServer::accept_conn_cb( evconnlistener * _listener
 	net_server->CreateConnection( base, _fd );
 }
 
-void CNetServer::accept_error_cb( evconnlistener* /*_listener*/, void* /*_ctx*/ )
+#define MAX_ERR_MSG_LEN 1024
+void CNetServer::accept_error_cb( evconnlistener* /*_listener*/, void* _ctx )
 {
 	//event_base* base = evconnlistener_get_base( _listener );
 	int32_t err = EVUTIL_SOCKET_ERROR();
-	fprintf( stderr
-		, "Got an error %d (%s) on the listener.\n"
+	char err_msg[MAX_ERR_MSG_LEN];
+	snprintf( err_msg
+		, MAX_ERR_MSG_LEN - 1
+		, "Got an error %d (%s) on the listener."
 		, err
 		, evutil_socket_error_to_string( err ) );
+	err_msg[MAX_ERR_MSG_LEN - 1] = 0;
+	CNetServer* net_server = (CNetServer*)_ctx;
+	net_server->get_net_stream()->OnErrorMessage( net_server->get_peer_id(), 0, err_msg );
 	//event_base_loopexit( base, nullptr );
 }
 

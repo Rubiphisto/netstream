@@ -33,6 +33,7 @@ typedef uint16_t NetPeerId;
 const uint8_t MESSAGE_TYPE_CONNECTED = 0;
 const uint8_t MESSAGE_TYPE_MESSAGE = 1;
 const uint8_t MESSAGE_TYPE_DISCONNECTED = 2;
+const uint8_t MESSAGE_TYPE_ERRORMSG = 3;
 
 struct NetStreamPacket
 {
@@ -44,8 +45,9 @@ struct NetStreamPacket
 };
 
 typedef void( *PacketArrivedHandler )( netstream_t, const NetStreamPacket&, uint64_t );
+typedef void( *NetStreamErrorMsgHandler )( netstream_t, NetPeerId, NetConnId, const char* );
 
-LIBNETSTREAM_API netstream_t netstream_create( PacketArrivedHandler _handler, uint64_t _param );
+LIBNETSTREAM_API netstream_t netstream_create( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param );
 LIBNETSTREAM_API NetPeerId netstream_listen( netstream_t _net_stream, const char* _local_addr, uint16_t _port );
 LIBNETSTREAM_API NetPeerId netstream_connect( netstream_t _net_stream, const char* _remote_addr, uint16_t _port );
 LIBNETSTREAM_API bool netstream_disconnect( netstream_t _net_stream, NetConnId _conn_id );

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <memory>
 #include <map>
 #include <mutex>
@@ -14,7 +14,7 @@ typedef std::shared_ptr<CNetConnection> CNetConnectionPtr;
 class CNetStream
 {
 public:
-	CNetStream( PacketArrivedHandler _handler, uint64_t _param );
+	CNetStream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param );
 	~CNetStream();
 
 	void Shutdown();
@@ -23,6 +23,7 @@ public:
 	bool Disconnect( NetConnId _conn_id );
 	bool ClosePeer( NetPeerId _peer_id );
 	void OnPacketArrived( const NetStreamPacket& _packet );
+	void OnErrorMessage( NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg );
 	void AddNetPacket( const NetStreamPacket& _packet );
 	int32_t GetNetPacket( NetStreamPacket& _packet );
 	int32_t SendNetMessage( NetConnId _conn_id, const void* _data, uint32_t _size );
@@ -45,7 +46,8 @@ private:
 	NetConnId			m_max_conn_id;
 	NetPeerId			m_max_peer_id;
 	CMessageList		m_message_list;
-	PacketArrivedHandler	m_packet_arrived_handler;
-	uint64_t				m_param_with_handler;
+	PacketArrivedHandler		m_packet_arrived_handler;
+	uint64_t					m_param_with_handler;
+	NetStreamErrorMsgHandler	m_errmsg_handler;
 };
 
