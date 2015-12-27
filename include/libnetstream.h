@@ -45,7 +45,7 @@ struct NetStreamPacket
 };
 
 typedef void( *PacketArrivedHandler )( netstream_t, const NetStreamPacket&, uint64_t );
-typedef void( *NetStreamErrorMsgHandler )( netstream_t, NetPeerId, NetConnId, const char* );
+typedef void( *NetStreamErrorMsgHandler )( netstream_t, NetPeerId, NetConnId, const char*, uint64_t );
 
 LIBNETSTREAM_API netstream_t netstream_create( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param );
 LIBNETSTREAM_API NetPeerId netstream_listen( netstream_t _net_stream, const char* _local_addr, uint16_t _port );

@@ -84,7 +84,7 @@ void DefaultPacketArrivedHandler( netstream_t _net_stream, const NetStreamPacket
 	_net_stream->AddNetPacket( _packet );
 }
 
-void DefaultErrorMsgHandler( netstream_t /*_net_stream*/, NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg )
+void DefaultErrorMsgHandler( netstream_t /*_net_stream*/, NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg, uint64_t )
 {
 	printf( "[netstream][PeerId:%u|ConnId:%llu]%s\n", _peer_id, _conn_id, _error_msg );
 }
@@ -180,7 +180,7 @@ void CNetStream::OnPacketArrived( const NetStreamPacket& _packet )
 
 void CNetStream::OnErrorMessage( NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg )
 {
-	m_errmsg_handler( ( netstream_t )this, _peer_id, _conn_id, _error_msg );
+	m_errmsg_handler( ( netstream_t )this, _peer_id, _conn_id, _error_msg, m_param_with_handler );
 }
 
 void CNetStream::AddNetPacket( const NetStreamPacket& _packet )
