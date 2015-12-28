@@ -47,7 +47,7 @@ private:
 	NetPeerId			m_max_peer_id;
 	CMessageList		m_message_list;
 	PacketArrivedHandler		m_packet_arrived_handler;
-	uint64_t					m_param_with_handler;
 	NetStreamErrorMsgHandler	m_errmsg_handler;
+	uint64_t					m_param_with_handler;
 };
 

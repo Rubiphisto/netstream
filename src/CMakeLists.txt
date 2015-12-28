@@ -43,3 +43,6 @@ if(WIN32)
 	target_link_libraries(${PROJECTNAME} ws2_32)
 endif(WIN32)
 
+install( TARGETS ${PROJECTNAME} DESTINATION lib )
+install( FILES ../include/libnetstream.h DESTINATION include )
+
