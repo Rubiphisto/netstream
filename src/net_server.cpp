@@ -92,12 +92,18 @@ void CNetServer::Run()
 
 void CNetServer::Unload()
 {
-	evconnlistener_free( m_listener );
-	m_listener = nullptr;
-	get_net_stream()->CloseConnectionsOnPeer( get_peer_id() );
-	event_free( m_exit_event );
-	m_exit_event = nullptr;
+	if( nullptr != m_exit_event )
+	{
+		event_free( m_exit_event );
+		m_exit_event = nullptr;
+	}
+	if( nullptr != m_listener )
+	{
+		evconnlistener_free( m_listener );
+		m_listener = nullptr;
+	}
 	DestroyEventBase();
+	get_net_stream()->CloseConnectionsOnPeer( get_peer_id() );
 }
 
 void CNetServer::Terminate()
