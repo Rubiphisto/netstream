@@ -116,21 +116,24 @@ void CNetConnection::RaisedError()
 void CNetConnection::read_cb( bufferevent* _bev, void *_ctx )
 {
 	evbuffer* input = bufferevent_get_input( _bev );
-	size_t buffer_len = evbuffer_get_length( input );
-	if( buffer_len < 4 )
-		return;
-	ev_uint32_t data_len;
-	evbuffer_copyout( input, &data_len, 4 );
-	data_len = ntohl( data_len );
-	if( buffer_len < data_len + 4 )
-		return;
-	uint8_t* data = new uint8_t[data_len];
-	if( nullptr == data )
-		return;
-	evbuffer_drain( input, 4 );
-	evbuffer_remove( input, data, data_len );
 	CNetConnection* net_server = (CNetConnection*)_ctx;
-	net_server->OnReceivedMessage( data, data_len );
+	while( true )
+	{
+		size_t buffer_len = evbuffer_get_length( input );
+		if( buffer_len < 4 )
+			return;
+		ev_uint32_t data_len;
+		evbuffer_copyout( input, &data_len, 4 );
+		data_len = ntohl( data_len );
+		if( buffer_len < data_len + 4 )
+			return;
+		uint8_t* data = new uint8_t[data_len];
+		if( nullptr == data )
+			return;
+		evbuffer_drain( input, 4 );
+		evbuffer_remove( input, data, data_len );
+		net_server->OnReceivedMessage( data, data_len );
+	}
 }
 
 void CNetConnection::event_cb( bufferevent* /*_bev*/, short _events, void* _ctx )
