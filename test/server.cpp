@@ -15,6 +15,7 @@
 #endif
 
 bool g_running = true;
+bool g_close_connection = false;
 std::list<NetConnId> all_connections;
 std::mutex g_list_mutex;
 std::queue<std::string> g_sending_list;
@@ -317,7 +318,7 @@ void OnRecvMessage( netstream_t _netstream, const NetStreamPacket _packet )
 		char content[MAX_CHAT_CONTENT];
 		uint32_t size() const
 		{
-			return (uint32_t)( sizeof( ChatMessage )-( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) ) );
+			return (uint32_t)( sizeof( ChatMessage ) - ( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) ) );
 		}
 	};
 	ChatMessage message;
@@ -340,18 +341,32 @@ void thread_func()
 		return;
 	while( g_running )
 	{
+		struct ChatMessage
+		{
+			uint64_t user_id;
+			char content[MAX_CHAT_CONTENT];
+			uint32_t size() const
+			{
+				return (uint32_t)( sizeof( ChatMessage ) - ( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) ) );
+			}
+		};
+		if( g_close_connection )
+		{
+			ChatMessage message;
+			message.user_id = 0;
+			strncpy( message.content, "I'm closing your connection!", MAX_CHAT_CONTENT - 1 );
+			message.content[MAX_CHAT_CONTENT - 1] = 0;
+			std::for_each( all_connections.begin(), all_connections.end(),
+				[&]( const NetConnId _conn_id )
+			{
+				netstream_send( netstream, _conn_id, &message, message.size() );
+				netstream_disconnect( netstream, _conn_id );
+			} );
+			g_close_connection = false;
+		}
 		std::string value;
 		while( GetSending( value ) )
 		{
-			struct ChatMessage
-			{
-				uint64_t user_id;
-				char content[MAX_CHAT_CONTENT];
-				uint32_t size() const
-				{
-					return (uint32_t)( sizeof( ChatMessage ) - ( MAX_CHAT_CONTENT - ( strlen( content ) + 1 ) ) );
-				}
-			};
 			ChatMessage message;
 			message.user_id = 0;
 			strncpy( message.content, value.c_str(), MAX_CHAT_CONTENT - 1 );
@@ -360,8 +375,7 @@ void thread_func()
 				[&]( const NetConnId _conn_id )
 			{
 				netstream_send( netstream, _conn_id, &message, message.size() );
-			}
-			);
+			} );
 		}
 		NetStreamPacket packet;
 		if( 0 != netstream_recv( netstream, packet ) )
@@ -386,7 +400,6 @@ void thread_func()
 			break;
 		case MESSAGE_TYPE_MESSAGE:
 			OnRecvMessage( netstream, packet );
-			//netstream_disconnect( netstream, packet.net_conn_id );
 			break;
 		}
 		netstream_free_packet( &packet );
@@ -413,6 +426,10 @@ int main( int32_t argc, char* argv[] )
 			std::string assemble_string( tokens[2], tokens[1][0] );
 			std::lock_guard<std::mutex> lock( g_list_mutex );
 			g_sending_list.push( assemble_string );
+		}
+		else if( 0 == strcmp( tokens[0], "close" ) )
+		{
+			g_close_connection = true;
 		}
 		else
 		{

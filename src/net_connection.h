@@ -33,17 +33,20 @@ public:
 	}
 public:
 	static void read_cb( struct bufferevent* _bev, void *_ctx );
+	static void write_cb( struct bufferevent* _bev, void *_ctx );
 	static void event_cb( struct bufferevent* _bev, short _events, void* _ctx );
 private:
 	void OnCreateConnection();
 	void OnReceivedMessage( uint8_t* _data, uint32_t _length );
 	void OnDestroyConnection();
+	void CheckOutputData();
 
 	void RaisedError();
 private:
-	CNetPeer*		m_net_peer;
-	std::mutex		m_bev_mutex;
-	bufferevent*	m_buffer_event;
-	NetConnId		m_conn_id;
+	CNetPeer*				m_net_peer;
+	bool					m_closing;
+	std::recursive_mutex	m_bev_mutex;
+	bufferevent*			m_buffer_event;
+	NetConnId				m_conn_id;
 };
 

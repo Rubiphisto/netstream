@@ -10,6 +10,7 @@
 
 CNetConnection::CNetConnection()
 	: m_net_peer( nullptr )
+	, m_closing( false )
 	, m_buffer_event( nullptr )
 	, m_conn_id( 0 )
 {
@@ -67,6 +68,15 @@ void CNetConnection::OnDestroyConnection()
 	packet.data = nullptr;
 	packet.data_size = 0;
 	m_net_peer->get_net_stream()->OnPacketArrived( packet );
+
+	{
+		std::lock_guard<std::recursive_mutex> lock( m_bev_mutex );
+		if( nullptr == m_buffer_event )
+			return;
+		bufferevent_free( m_buffer_event );
+		m_buffer_event = nullptr;
+	}
+	m_net_peer->get_net_stream()->DelConnection( get_net_conn_id() );
 }
 
 void CNetConnection::CreateConnection()
@@ -77,24 +87,42 @@ void CNetConnection::CreateConnection()
 
 void CNetConnection::CloseConnection()
 {
+	std::lock_guard<std::recursive_mutex> lock( m_bev_mutex );
+	if( nullptr == m_buffer_event )
+		return;
+	if( m_closing )
+		return;
+	m_closing = true;
+	if( 0 != evbuffer_get_length( bufferevent_get_output( m_buffer_event ) ) )
 	{
-		std::lock_guard<std::mutex> lock( m_bev_mutex );
-		if( nullptr == m_buffer_event )
-			return;
-		bufferevent_free( m_buffer_event );
-		m_buffer_event = nullptr;
+		bufferevent_disable( m_buffer_event, EV_READ );
+		bufferevent_setcb( m_buffer_event, nullptr, write_cb, event_cb, this );
 	}
-	OnDestroyConnection();
-	m_net_peer->get_net_stream()->DelConnection( get_net_conn_id() );
-	//delete this;
+	else
+	{
+		OnDestroyConnection();
+	}
 }
 
+void CNetConnection::CheckOutputData()
+{
+	std::lock_guard<std::recursive_mutex> lock( m_bev_mutex );
+	if( !m_closing )
+		return;
+	if( nullptr == m_buffer_event )
+		return;
+	if( 0 != evbuffer_get_length( bufferevent_get_output( m_buffer_event ) ) )
+		return;
+	OnDestroyConnection();
+}
 
 int32_t CNetConnection::WriteData( const void* _data, uint32_t _size )
 {
-	std::lock_guard<std::mutex> lock( m_bev_mutex );
+	std::lock_guard<std::recursive_mutex> lock( m_bev_mutex );
 	if( nullptr == m_buffer_event )
 		return -1;
+	if( m_closing )
+		return -2;
 	uint32_t head = htonl( _size );
 	bufferevent_write( m_buffer_event, &head, 4 );
 	bufferevent_write( m_buffer_event, _data, _size );
@@ -116,7 +144,7 @@ void CNetConnection::RaisedError()
 void CNetConnection::read_cb( bufferevent* _bev, void *_ctx )
 {
 	evbuffer* input = bufferevent_get_input( _bev );
-	CNetConnection* net_server = (CNetConnection*)_ctx;
+	CNetConnection* net_connection = (CNetConnection*)_ctx;
 	while( true )
 	{
 		size_t buffer_len = evbuffer_get_length( input );
@@ -132,8 +160,14 @@ void CNetConnection::read_cb( bufferevent* _bev, void *_ctx )
 			return;
 		evbuffer_drain( input, 4 );
 		evbuffer_remove( input, data, data_len );
-		net_server->OnReceivedMessage( data, data_len );
+		net_connection->OnReceivedMessage( data, data_len );
 	}
+}
+
+void CNetConnection::write_cb( bufferevent* /*_bev*/, void *_ctx )
+{
+	CNetConnection* net_connection = (CNetConnection*)_ctx;
+	net_connection->CheckOutputData();
 }
 
 void CNetConnection::event_cb( bufferevent* /*_bev*/, short _events, void* _ctx )
@@ -143,7 +177,7 @@ void CNetConnection::event_cb( bufferevent* /*_bev*/, short _events, void* _ctx 
 	{
 		if( _events & BEV_EVENT_ERROR )
 			conn->RaisedError();
-		conn->CloseConnection();
+		conn->OnDestroyConnection();
 	}
 	else if( _events & BEV_EVENT_CONNECTED )
 		conn->CreateConnection();

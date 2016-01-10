@@ -14,6 +14,7 @@
 #define MAX_CHAT_CONTENT 1024
 
 bool g_running = true;
+bool g_close_connection = false;
 std::mutex g_list_mutex;
 std::queue<std::string> g_sending_list;
 
@@ -43,7 +44,7 @@ void OnRecvMessage( const NetStreamPacket _packet )
 	};
 	ChatMessage* message = (ChatMessage*)_packet.data;
 	//printf( "[%u] said: %s\n", message->user_id, message->content );
-	printf( "[%llu] said something: %llu/%u\n", message->user_id, strlen( message->content ), _packet.data_size );
+	printf( "[%llu,%llu,%u] say : %s\n", message->user_id, strlen( message->content ), _packet.data_size, message->content );
 }
 
 void thread_func()
@@ -56,6 +57,11 @@ void thread_func()
 	NetConnId conn_id = 0;
 	while( g_running )
 	{
+		if( g_close_connection )
+		{
+			netstream_disconnect( netstream, conn_id );
+			g_close_connection = false;
+		}
 		// send
 		std::string value;
 		while( GetSending( value ) )
@@ -100,6 +106,11 @@ int main( int32_t argc, char* argv[] )
 		printf( "CMD: %s\n", line_buffer );
 		if( 0 == strcmp( line_buffer, "exit" ) )
 			break;
+		if( 0 == strcmp( line_buffer, "close" ) )
+		{
+			g_close_connection = true;
+			continue;
+		}
 		std::lock_guard<std::mutex> lock( g_list_mutex );
 		g_sending_list.push( line_buffer );
 	}
