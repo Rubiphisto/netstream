@@ -74,7 +74,7 @@ bool CNetServer::Load()
 	m_listener = evconnlistener_new_bind( base
 		, accept_conn_cb
 		, this
-		, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE
+		, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE
 		, -1
 		, (sockaddr*)&addr
 		, sizeof( sockaddr_in ) );

@@ -27,7 +27,7 @@ bool CNetConnection::Initialize( CNetPeer* _net_peer, evutil_socket_t _fd )
 		return false;
 	m_net_peer = _net_peer;
 	m_conn_id = conn_id;
-	m_buffer_event = bufferevent_socket_new( m_net_peer->get_event_base(), _fd, BEV_OPT_CLOSE_ON_FREE );
+	m_buffer_event = bufferevent_socket_new( m_net_peer->get_event_base(), _fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE );
 	bufferevent_setcb( m_buffer_event, read_cb, nullptr, event_cb, this );
 	bufferevent_enable( m_buffer_event, EV_READ | EV_WRITE );
 	if( -1 != _fd )
