@@ -1,68 +1,28 @@
 ﻿#include "stdafx.h"
 #include "net_server.h"
 
-#include <event2/bufferevent.h>
-#include <event2/buffer.h>
-#include <event2/event.h>
-#include <string.h>
-#include <exception>
+#include <event2/listener.h>
 
 #include "net_stream.h"
 #include "net_connection.h"
 
-CNetServer::CNetServer( CNetStream* _net_stream, const char* _address, uint16_t _port )
-	: CNetPeer( _net_stream )
+NetServer::NetServer( NetStream* _net_stream, const char* _address, uint16_t _port )
+	: NetPeer( _net_stream )
 	, m_address( _address )
 	, m_port( _port )
 	, m_listener( nullptr )
 {
 }
 
-CNetServer::~CNetServer()
+NetServer::~NetServer()
 {
 }
 
-bool CNetServer::Initialize()
-{
-	m_thread = new std::thread( std::ref( *this ) );
-	return true;
-}
-
-void CNetServer::Stop()
-{
-	Terminate();
-}
-
-void CNetServer::Uninitialize()
-{
-	if( nullptr == m_thread )
-		return;
-	m_thread->join();
-}
-
-void CNetServer::operator()()
-{
-	if( Load() )
-	{
-		m_execution_status = eExecutionStatus::Running;
-		Run();
-		m_execution_status = eExecutionStatus::Terminating;
-		Unload();
-	}
-	else
-	{
-		m_execution_status = eExecutionStatus::Terminating;
-		Unload();
-		// TODO: There is no method to notify the fail situation to the outer.
-	}
-	m_execution_status = eExecutionStatus::Terminated;
-}
-
-bool CNetServer::Load()
+bool NetServer::_startService()
 {
 	if( nullptr != get_event_base() )
 		return false;
-	event_base* base = CreateEventBase();
+	event_base* base = _createEventBase();
 	if( nullptr == base )
 		return false;
 	sockaddr_in addr;
@@ -81,44 +41,25 @@ bool CNetServer::Load()
 	if( nullptr == m_listener )
 		return false;
 	evconnlistener_set_error_cb( m_listener, accept_error_cb );
-	m_exit_event = event_new( base, -1, 0, exit_listen_cb, this );
 	return true;
 }
 
-void CNetServer::Run()
+void NetServer::_stopService()
 {
-	event_base_dispatch( get_event_base() );
-}
-
-void CNetServer::Unload()
-{
-	if( nullptr != m_exit_event )
-	{
-		event_free( m_exit_event );
-		m_exit_event = nullptr;
-	}
 	if( nullptr != m_listener )
 	{
 		evconnlistener_free( m_listener );
 		m_listener = nullptr;
 	}
 	get_net_stream()->CloseConnectionsOnPeer( get_peer_id() );
-	DestroyEventBase();
+	_destroyEventBase();
 }
 
-void CNetServer::Terminate()
-{
-	if( m_execution_status >= eExecutionStatus::Terminating )
-		return;
-	event_active( m_exit_event, 0, 0 );
-	m_execution_status = eExecutionStatus::Terminating;
-}
-
-bool CNetServer::CreateConnection( event_base* _base, evutil_socket_t _fd )
+bool NetServer::_createConnection( event_base* _base, evutil_socket_t _fd )
 {
 	if( get_event_base() != _base )
 		throw std::invalid_argument( "Unmatch event_base" );
-	CNetConnection* conn = new CNetConnection();
+	NetConnection* conn = new NetConnection();
 	if( nullptr == conn )
 		return false;
 	if( !conn->Initialize( this, _fd ) )
@@ -126,25 +67,23 @@ bool CNetServer::CreateConnection( event_base* _base, evutil_socket_t _fd )
 		delete conn;
 		return false;
 	}
-	//m_connections.insert( std::make_pair( peer->get_net_conn_id(), peer ) );
 	return true;
 }
 
-void CNetServer::accept_conn_cb( evconnlistener * _listener
+void NetServer::accept_conn_cb( evconnlistener * _listener
 	, evutil_socket_t _fd
 	, sockaddr* /*_addr*/
 	, int32_t /*_socklen*/
 	, void * _ctx )
 {
 	event_base* base = evconnlistener_get_base( _listener );
-	CNetServer* net_server = (CNetServer*)_ctx;
-	net_server->CreateConnection( base, _fd );
+	NetServer* net_server = (NetServer*)_ctx;
+	net_server->_createConnection( base, _fd );
 }
 
 #define MAX_ERR_MSG_LEN 1024
-void CNetServer::accept_error_cb( evconnlistener* /*_listener*/, void* _ctx )
+void NetServer::accept_error_cb( evconnlistener* /*_listener*/, void* _ctx )
 {
-	//event_base* base = evconnlistener_get_base( _listener );
 	int32_t err = EVUTIL_SOCKET_ERROR();
 	char err_msg[MAX_ERR_MSG_LEN];
 	snprintf( err_msg
@@ -153,14 +92,6 @@ void CNetServer::accept_error_cb( evconnlistener* /*_listener*/, void* _ctx )
 		, err
 		, evutil_socket_error_to_string( err ) );
 	err_msg[MAX_ERR_MSG_LEN - 1] = 0;
-	CNetServer* net_server = (CNetServer*)_ctx;
+	NetServer* net_server = (NetServer*)_ctx;
 	net_server->get_net_stream()->OnErrorMessage( net_server->get_peer_id(), 0, err_msg );
-	//event_base_loopexit( base, nullptr );
 }
-
-void CNetServer::exit_listen_cb( evutil_socket_t /*_fd*/, short /*_what*/, void* _arg )
-{
-	CNetServer* server = (CNetServer*)_arg;
-	event_base_loopexit( server->get_event_base(), nullptr );
-}
-

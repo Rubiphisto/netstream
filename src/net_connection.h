@@ -2,21 +2,26 @@
 #include <memory>
 #include <mutex>
 #include <event2/event.h>
+#include <event2/buffer.h>
 
 #include "net_peer.h"
 
 struct bufferevent;
 
-class CNetConnection
+class NetConnection
 {
 public:
-	CNetConnection();
-	~CNetConnection();
+	NetConnection();
+	~NetConnection();
 
-	bool Initialize( CNetPeer* _net_peer, evutil_socket_t _fd );
+	bool Initialize( NetPeer* _net_peer, evutil_socket_t _fd );
 	void CreateConnection();
 	void CloseConnection();
-	int32_t WriteData( const void* _data, uint32_t _size );
+	NetPeer* GetNetPeer() const
+	{
+		return m_net_peer;
+	}
+	int32_t WriteData( evbuffer* _buff );
 
 	// property
 	NetConnId get_net_conn_id() const
@@ -36,16 +41,15 @@ public:
 	static void write_cb( struct bufferevent* _bev, void *_ctx );
 	static void event_cb( struct bufferevent* _bev, short _events, void* _ctx );
 private:
-	void OnCreateConnection();
-	void OnReceivedMessage( uint8_t* _data, uint32_t _length );
-	void OnDestroyConnection();
-	void CheckOutputData();
+	void _onCreateConnection();
+	void _onReceivedMessage( uint8_t* _data, uint32_t _length );
+	void _onDestroyConnection();
+	void _checkOutputData();
 
-	void RaisedError();
+	void _raisedError();
 private:
-	CNetPeer*				m_net_peer;
+	NetPeer*				m_net_peer;
 	bool					m_closing;
-	std::recursive_mutex	m_bev_mutex;
 	bufferevent*			m_buffer_event;
 	NetConnId				m_conn_id;
 };

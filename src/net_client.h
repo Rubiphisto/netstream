@@ -1,33 +1,35 @@
 #pragma once 
-#include <thread>
-#include <event2/event.h>
-
 #include "net_peer.h"
 
-struct bufferevent;
-struct event;
-
-class CNetClient : public CNetPeer
+class NetClient : public NetPeer
 {
 public:
-	CNetClient( CNetStream* _net_stream, const char* _address, uint16_t _port );
-	~CNetClient();
-
-	virtual bool Initialize();
-	virtual void Stop();
-	virtual void Uninitialize();
-
-	void operator()();
-public:
-	static void exit_connection_cb( evutil_socket_t _fd, short _what, void* _arg );
+	/**
+	the constructor
+	*/
+	NetClient( NetStream* _net_stream, const char* _address, uint16_t _port );
+	/**
+	the destructor
+	*/
+	~NetClient();
 private:
-	bool Load();
-	void Run();
-	void Unload();
-	void Terminate();
+	/**
+	the implementation to start the service
+
+	@return return true if the service is started successfully and vice versa.
+	*/
+	bool _startService() override;
+	/**
+	the implementation to stop the service
+	*/
+	void _stopService() override;
 private:
-	std::thread*		m_thread;
+	/**
+	the host address
+	*/
 	std::string			m_address;
+	/**
+	the host's listening port
+	*/
 	uint16_t			m_port;
-	event*				m_exit_event;
 };

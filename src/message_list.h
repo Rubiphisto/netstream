@@ -4,11 +4,11 @@
 
 #include "libnetstream.h"
 
-class CMessageList
+class MessageList
 {
 public:
-	CMessageList();
-	~CMessageList();
+	MessageList();
+	~MessageList();
 
 	void PushMessage( const NetStreamPacket& _packet );
 	bool PopMessage( NetStreamPacket& _packet );

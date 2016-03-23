@@ -10,10 +10,10 @@
 #include "net_client.h"
 #include "net_connection.h"
 
-struct netstream : public CNetStream
+struct netstream : public NetStream
 {
 	netstream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
-		: CNetStream( _packet_handler, _errmsg_handler, _param )
+		: NetStream( _packet_handler, _errmsg_handler, _param )
 	{
 	}
 };
@@ -89,7 +89,7 @@ void DefaultErrorMsgHandler( netstream_t /*_net_stream*/, NetPeerId _peer_id, Ne
 	printf( "[netstream][PeerId:%u|ConnId:%llu]%s\n", _peer_id, _conn_id, _error_msg );
 }
 
-CNetStream::CNetStream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
+NetStream::NetStream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
 	: m_max_conn_id( 0 )
 	, m_max_peer_id( 0 )
 	, m_packet_arrived_handler( _packet_handler )
@@ -102,13 +102,13 @@ CNetStream::CNetStream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgH
 		m_errmsg_handler = DefaultErrorMsgHandler;
 }
 
-CNetStream::~CNetStream()
+NetStream::~NetStream()
 {
 }
 
-NetPeerId CNetStream::StartServer( const char* _local_addr, uint16_t _port )
+NetPeerId NetStream::StartServer( const char* _local_addr, uint16_t _port )
 {
-	CNetServer* net_server = new CNetServer( this, _local_addr, _port );
+	NetServer* net_server = new NetServer( this, _local_addr, _port );
 	if( !net_server->Initialize() )
 	{
 		delete net_server;
@@ -118,9 +118,9 @@ NetPeerId CNetStream::StartServer( const char* _local_addr, uint16_t _port )
 	return net_server->get_peer_id();
 }
 
-NetPeerId CNetStream::ConnectServer( const char* _remote_addr, uint16_t _port )
+NetPeerId NetStream::ConnectServer( const char* _remote_addr, uint16_t _port )
 {
-	CNetClient* net_client = new CNetClient( this, _remote_addr, _port );
+	NetClient* net_client = new NetClient( this, _remote_addr, _port );
 	if( !net_client->Initialize() )
 	{
 		delete net_client;
@@ -130,21 +130,22 @@ NetPeerId CNetStream::ConnectServer( const char* _remote_addr, uint16_t _port )
 	return net_client->get_peer_id();
 }
 
-bool CNetStream::Disconnect( NetConnId _conn_id )
+bool NetStream::Disconnect( NetConnId _conn_id )
 {
 	CNetConnectionPtr connection;
 	if( !GetConnection( _conn_id, connection ) )
 		return false;
-	connection->CloseConnection();
+	connection->GetNetPeer()->CloseConnection( _conn_id );
+	//connection->CloseConnection();
 	return true;
 }
 
-bool CNetStream::ClosePeer( NetPeerId _peer_id )
+bool NetStream::ClosePeer( NetPeerId _peer_id )
 {
 	PeersList::iterator it = m_peers.find( _peer_id );
 	if( it == m_peers.end() )
 		return false;
-	CNetPeer* peer = it->second;
+	NetPeer* peer = it->second;
 	peer->Stop();
 	peer->Uninitialize();
 	delete peer;
@@ -152,7 +153,7 @@ bool CNetStream::ClosePeer( NetPeerId _peer_id )
 	return true;
 }
 
-void CNetStream::Shutdown()
+void NetStream::Shutdown()
 {
 	std::for_each( m_peers.begin(), m_peers.end(),
 		[]( const PeersList::value_type& _value )
@@ -164,7 +165,7 @@ void CNetStream::Shutdown()
 	std::for_each( m_peers.begin(), m_peers.end(),
 		[]( const PeersList::value_type& _value )
 	{
-		CNetPeer* peer = _value.second;
+		NetPeer* peer = _value.second;
 		peer->Uninitialize();
 		delete peer;
 		return true;
@@ -173,37 +174,38 @@ void CNetStream::Shutdown()
 	m_peers.clear();
 }
 
-void CNetStream::OnPacketArrived( const NetStreamPacket& _packet )
+void NetStream::OnPacketArrived( const NetStreamPacket& _packet )
 {
 	m_packet_arrived_handler( ( netstream_t )this, _packet, m_param_with_handler );
 }
 
-void CNetStream::OnErrorMessage( NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg )
+void NetStream::OnErrorMessage( NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg )
 {
 	m_errmsg_handler( ( netstream_t )this, _peer_id, _conn_id, _error_msg, m_param_with_handler );
 }
 
-void CNetStream::AddNetPacket( const NetStreamPacket& _packet )
+void NetStream::AddNetPacket( const NetStreamPacket& _packet )
 {
 	m_message_list.PushMessage( _packet );
 }
 
-int32_t CNetStream::GetNetPacket( NetStreamPacket& _packet )
+int32_t NetStream::GetNetPacket( NetStreamPacket& _packet )
 {
 	bool ret = m_message_list.PopMessage( _packet );
 	return ret ? 0 : -1;
 }
 
 
-int32_t CNetStream::SendNetMessage( NetConnId _conn_id, const void* _data, uint32_t _size )
+int32_t NetStream::SendNetMessage( NetConnId _conn_id, const void* _data, uint32_t _size )
 {
 	CNetConnectionPtr connection;
 	if( !GetConnection( _conn_id, connection ) )
 		return -1;
-	return connection->WriteData( _data, _size );
+	connection->GetNetPeer()->SendMsg( _conn_id, _data, _size );
+	return 0;
 }
 
-bool CNetStream::AddConnection( CNetConnection* _conn )
+bool NetStream::AddConnection( NetConnection* _conn )
 {
 	CNetConnectionPtr conn_ptr( _conn );
 	std::lock_guard<std::mutex> lock( m_connection_mutex );
@@ -211,13 +213,13 @@ bool CNetStream::AddConnection( CNetConnection* _conn )
 	return true;
 }
 
-void CNetStream::DelConnection( NetConnId _conn_id )
+void NetStream::DelConnection( NetConnId _conn_id )
 {
 	std::lock_guard<std::mutex> lock( m_connection_mutex );
 	m_connections.erase( _conn_id );
 }
 
-bool CNetStream::GetConnection( NetConnId _conn_id, CNetConnectionPtr& _conn )
+bool NetStream::GetConnection( NetConnId _conn_id, CNetConnectionPtr& _conn )
 {
 	_conn.reset();
 	std::lock_guard<std::mutex> lock( m_connection_mutex );
@@ -228,7 +230,7 @@ bool CNetStream::GetConnection( NetConnId _conn_id, CNetConnectionPtr& _conn )
 	return true;
 }
 
-void CNetStream::CloseConnectionsOnPeer( NetPeerId _peer_id )
+void NetStream::CloseConnectionsOnPeer( NetPeerId _peer_id )
 {
 	std::list<CNetConnectionPtr> list;
 	{ // lock guard
@@ -250,14 +252,14 @@ void CNetStream::CloseConnectionsOnPeer( NetPeerId _peer_id )
 	);
 }
 
-NetConnId CNetStream::BuildNewConnId()
+NetConnId NetStream::BuildNewConnId()
 {
 	int64_t now_time = time( nullptr );
 	++m_max_conn_id;
 	return ( ( now_time & 0x0FFFFFFFF ) << 32 ) | ( m_max_conn_id & 0x0FFFFFFFF );
 }
 
-NetPeerId CNetStream::BuildNewPeerId()
+NetPeerId NetStream::BuildNewPeerId()
 {
 	return ++m_max_peer_id;
 }
