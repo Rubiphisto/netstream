@@ -88,7 +88,7 @@ void NetServer::accept_error_cb( evconnlistener* /*_listener*/, void* _ctx )
 	char err_msg[MAX_ERR_MSG_LEN];
 	snprintf( err_msg
 		, MAX_ERR_MSG_LEN - 1
-		, "Got an error %d (%s) on the listener."
+		, "Got an error %" PRId32 " (%s) on the listener."
 		, err
 		, evutil_socket_error_to_string( err ) );
 	err_msg[MAX_ERR_MSG_LEN - 1] = 0;

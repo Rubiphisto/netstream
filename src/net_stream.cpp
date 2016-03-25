@@ -86,7 +86,7 @@ void DefaultPacketArrivedHandler( netstream_t _net_stream, const NetStreamPacket
 
 void DefaultErrorMsgHandler( netstream_t /*_net_stream*/, NetPeerId _peer_id, NetConnId _conn_id, const char* _error_msg, uint64_t )
 {
-	printf( "[netstream][PeerId:%u|ConnId:%llu]%s\n", _peer_id, _conn_id, _error_msg );
+	printf( "[netstream][PeerId:%" PRIu32 "|ConnId:%" PRIu64 "]%s\n", _peer_id, _conn_id, _error_msg );
 }
 
 NetStream::NetStream( PacketArrivedHandler _packet_handler, NetStreamErrorMsgHandler _errmsg_handler, uint64_t _param )
