@@ -24,6 +24,13 @@ else()
 	endif()
 endif()
 
+if( NOT LIB_INSTALL_DIR )
+	set( LIB_INSTALL_DIR lib )
+endif()
+if( NOT INCLUDE_INSTALL_DIR )
+	set( INCLUDE_INSTALL_DIR include )
+endif()
+
 # Include necessary submodules
 set(CMAKE_MODULE_PATH
 	"${NETSTREAM_SOURCE_DIR}/cmake"
