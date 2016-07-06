@@ -1,6 +1,1 @@
-set (HEADER_FILES
-)
-set (SOURCE_FILES
-	server.cpp
-)
-
+﻿netstream_add_source( server server.cpp )
