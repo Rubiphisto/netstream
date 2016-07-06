@@ -12,6 +12,8 @@ NetServer::NetServer( NetStream* _net_stream, const char* _address, uint16_t _po
 	, m_port( _port )
 	, m_listener( nullptr )
 {
+	if( m_address.empty() )
+		m_address = "[::]";
 }
 
 NetServer::~NetServer()
@@ -25,11 +27,12 @@ bool NetServer::_startService()
 	event_base* base = _createEventBase();
 	if( nullptr == base )
 		return false;
-	sockaddr_in addr;
-	memset( &addr, 0, sizeof( sockaddr_in ) );
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl( 0 );
-	addr.sin_port = htons( m_port );
+	sockaddr_storage addr;
+	int32_t addr_len = sizeof( sockaddr_storage );
+	char buff[512];
+	evutil_snprintf( buff, 512, "%s:%u", m_address.c_str(), m_port );
+	if( evutil_parse_sockaddr_port( buff, (sockaddr*)&addr, &addr_len ) )
+		return false;
 
 	m_listener = evconnlistener_new_bind( base
 		, accept_conn_cb
@@ -37,7 +40,7 @@ bool NetServer::_startService()
 		, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE | LEV_OPT_THREADSAFE
 		, -1
 		, (sockaddr*)&addr
-		, sizeof( sockaddr_in ) );
+		, addr_len );
 	if( nullptr == m_listener )
 		return false;
 	evconnlistener_set_error_cb( m_listener, accept_error_cb );

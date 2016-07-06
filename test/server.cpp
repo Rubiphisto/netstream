@@ -16,6 +16,8 @@
 
 bool g_running = true;
 bool g_close_connection = false;
+std::string g_address;
+int32_t g_port;
 std::list<NetConnId> all_connections;
 std::mutex g_list_mutex;
 std::queue<std::string> g_sending_list;
@@ -336,7 +338,7 @@ void thread_func()
 {
 	printf( "enter thread!\n" );
 	netstream_t netstream = netstream_create( nullptr, nullptr, 0 );
-	NetPeerId peer_id = netstream_listen( netstream, "", 7000 );
+	NetPeerId peer_id = netstream_listen( netstream, g_address.c_str(), g_port );
 	if( 0 == peer_id )
 		return;
 	while( g_running )
@@ -412,6 +414,13 @@ void thread_func()
 
 int main( int32_t argc, char* argv[] )
 {
+	if( argc != 3 )
+	{
+		printf( "%s <ipv4 or ipv6 address> <listen port>\n", argv[0] );
+		return -1;
+	}
+	g_address = argv[1];
+	g_port = atoi( argv[2] );
 	std::thread m( thread_func );
 	char line_buffer[MAX_CHAT_CONTENT];
 	while( true )
