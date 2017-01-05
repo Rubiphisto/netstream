@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "net_connection.h"
 
+#ifdef WIN32
+#include <Ws2ipdef.h>
+#endif
+
 #include <event2/bufferevent.h>
 
 #include "net_peer.h"
@@ -41,8 +45,30 @@ void NetConnection::_onCreateConnection()
 	packet.packet_type = MESSAGE_TYPE_CONNECTED;
 	packet.peer_id = m_net_peer->get_peer_id();
 	packet.net_conn_id = get_net_conn_id();
-	packet.data = nullptr;
-	packet.data_size = 0;
+	packet.data = (uint8_t*)new NetStreamAddress();
+	packet.data_size = sizeof( NetStreamAddress );
+	// fill address
+	memset( packet.data, 0, sizeof( NetStreamAddress ) );
+	evutil_socket_t fd = bufferevent_getfd( m_buffer_event );
+	if( -1 != fd )
+	{
+		sockaddr_storage ss;
+		ev_socklen_t len = ( ev_socklen_t )sizeof( sockaddr_storage );
+		if( 0 ==  getpeername( bufferevent_getfd( m_buffer_event ), (sockaddr*)&ss, &len ) )
+		{
+			switch( ss.ss_family )
+			{
+			case AF_INET:
+				evutil_inet_ntop( ss.ss_family, &( (sockaddr_in*)&ss )->sin_addr, ( (NetStreamAddress*)packet.data )->address, ADDRESS_LENGTH );
+				( (NetStreamAddress*)packet.data )->port = ( (sockaddr_in*)&ss )->sin_port;
+				break;
+			case AF_INET6:
+				evutil_inet_ntop( ss.ss_family, &( (sockaddr_in6*)&ss )->sin6_addr, ( (NetStreamAddress*)packet.data )->address, ADDRESS_LENGTH );
+				( (NetStreamAddress*)packet.data )->port = ( (sockaddr_in6*)&ss )->sin6_port;
+				break;
+			}
+		}
+	}
 	m_net_peer->get_net_stream()->OnPacketArrived( packet );
 }
 
@@ -63,8 +89,32 @@ void NetConnection::_onDestroyConnection()
 	packet.packet_type = MESSAGE_TYPE_DISCONNECTED;
 	packet.peer_id = m_net_peer->get_peer_id();
 	packet.net_conn_id = get_net_conn_id();
-	packet.data = nullptr;
-	packet.data_size = 0;
+	//packet.data = nullptr;
+	//packet.data_size = 0;
+	packet.data = (uint8_t*)new NetStreamAddress();
+	packet.data_size = sizeof( NetStreamAddress );
+	// fill address
+	memset( packet.data, 0, sizeof( NetStreamAddress ) );
+	evutil_socket_t fd = bufferevent_getfd( m_buffer_event );
+	if( -1 != fd )
+	{
+		sockaddr_storage ss;
+		ev_socklen_t len = ( ev_socklen_t )sizeof( sockaddr_storage );
+		if( 0 ==  getpeername( bufferevent_getfd( m_buffer_event ), (sockaddr*)&ss, &len ) )
+		{
+			switch( ss.ss_family )
+			{
+			case AF_INET:
+				evutil_inet_ntop( ss.ss_family, &( (sockaddr_in*)&ss )->sin_addr, ( (NetStreamAddress*)packet.data )->address, ADDRESS_LENGTH );
+				( (NetStreamAddress*)packet.data )->port = ( (sockaddr_in*)&ss )->sin_port;
+				break;
+			case AF_INET6:
+				evutil_inet_ntop( ss.ss_family, &( (sockaddr_in6*)&ss )->sin6_addr, ( (NetStreamAddress*)packet.data )->address, ADDRESS_LENGTH );
+				( (NetStreamAddress*)packet.data )->port = ( (sockaddr_in6*)&ss )->sin6_port;
+				break;
+			}
+		}
+	}
 	m_net_peer->get_net_stream()->OnPacketArrived( packet );
 
 	bufferevent_free( m_buffer_event );

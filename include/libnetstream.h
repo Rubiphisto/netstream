@@ -35,6 +35,8 @@ const uint8_t MESSAGE_TYPE_MESSAGE = 1;
 const uint8_t MESSAGE_TYPE_DISCONNECTED = 2;
 const uint8_t MESSAGE_TYPE_ERRORMSG = 3;
 
+const int32_t ADDRESS_LENGTH = 128;
+
 struct NetStreamPacket
 {
 	uint8_t		packet_type;
@@ -42,6 +44,12 @@ struct NetStreamPacket
 	NetConnId	net_conn_id;
 	uint32_t	data_size;
 	uint8_t*	data;
+};
+
+struct NetStreamAddress
+{
+	char address[ADDRESS_LENGTH];
+	int32_t port;
 };
 
 typedef void( *PacketArrivedHandler )( netstream_t, const NetStreamPacket&, uint64_t );

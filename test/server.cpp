@@ -8,6 +8,7 @@
 #include <queue>
 #include <string>
 #include <mutex>
+#include <cinttypes>
 #include "libnetstream.h"
 
 #if defined( _WINDOWS )
@@ -389,7 +390,10 @@ void thread_func()
 		{
 		case MESSAGE_TYPE_CONNECTED:
 			all_connections.push_back( packet.net_conn_id );
-			printf( "A new connection[%llu] has arrived.\n", packet.net_conn_id );
+			printf( "A new connection[%" PRIu64"] which come from %s %" PRIu32 " has arrived.\n"
+				, packet.net_conn_id
+				, ( (NetStreamAddress*)packet.data )->address
+				, ( (NetStreamAddress*)packet.data )->port );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
 			all_connections.remove_if(
@@ -398,7 +402,10 @@ void thread_func()
 				return _conn_id == packet.net_conn_id;
 			}
 			);
-			printf( "A connection[%llu] has lost.\n", packet.net_conn_id );
+			printf( "A connection[%" PRIu64"] which come from %s %" PRIu32" has lost.\n"
+				, packet.net_conn_id
+				, ( (NetStreamAddress*)packet.data )->address
+				, ( (NetStreamAddress*)packet.data )->port );
 			break;
 		case MESSAGE_TYPE_MESSAGE:
 			OnRecvMessage( netstream, packet );

@@ -5,6 +5,7 @@
 #include <string>
 #include <mutex>
 #include <string.h>
+#include <cinttypes>
 #include "libnetstream.h"
 
 #if defined( _WINDOWS )
@@ -46,7 +47,7 @@ void OnRecvMessage( const NetStreamPacket _packet )
 	};
 	ChatMessage* message = (ChatMessage*)_packet.data;
 	//printf( "[%u] said: %s\n", message->user_id, message->content );
-	printf( "[%llu,%llu,%u] say : %s\n", message->user_id, strlen( message->content ), _packet.data_size, message->content );
+	printf( "[%" PRIu64",%" PRIu64",%" PRIu32"] say : %s\n", message->user_id, strlen( message->content ), _packet.data_size, message->content );
 }
 
 void thread_func()
@@ -81,10 +82,16 @@ void thread_func()
 		{
 		case MESSAGE_TYPE_CONNECTED:
 			conn_id = packet.net_conn_id;
-			printf( "Connected to server, I'm [%llu]\n", conn_id );
+			printf( "Connected to server %s %" PRId32", I'm [%" PRIu64"]\n"
+				, ( (NetStreamAddress*)packet.data )->address
+				, ( (NetStreamAddress*)packet.data )->port
+				, conn_id );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
-			printf( "Disconnected from server, I'm [%llu]\n", conn_id );
+			printf( "Disconnected from server %s %" PRId32", I'm [%" PRIu64"]\n"
+				, ( (NetStreamAddress*)packet.data )->address
+				, ( (NetStreamAddress*)packet.data )->port
+				, conn_id );
 			conn_id = 0;
 			break;
 		case MESSAGE_TYPE_MESSAGE:

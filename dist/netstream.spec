@@ -1,5 +1,5 @@
 Name:		netstream
-Version:	1.1.0
+Version:	1.2.0
 Release:	1%{?dist}
 Summary:	netstream is a net communication library which exploit the libevent's functionality
 

@@ -32,11 +32,7 @@ bool NetClient::_startService()
 		delete conn;
 		return false;
 	}
-	sockaddr_storage addr;
-	int32_t addr_len = sizeof( sockaddr_storage );
-	if( evutil_parse_sockaddr_port( m_address.c_str(), (sockaddr*)&addr, &addr_len ) )
-		return false;
-	if( 0 != bufferevent_socket_connect_hostname( conn->get_buffer_event(), nullptr, addr.ss_family, m_address.c_str(), m_port ) )
+	if( 0 != bufferevent_socket_connect_hostname( conn->get_buffer_event(), nullptr, AF_UNSPEC, m_address.c_str(), m_port ) )
 	{
 		delete conn;
 		return false;
