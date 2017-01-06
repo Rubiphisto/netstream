@@ -62,6 +62,8 @@ LIBNETSTREAM_API bool netstream_disconnect( netstream_t _net_stream, NetConnId _
 LIBNETSTREAM_API bool netstream_close( netstream_t _net_stream, NetPeerId _peer_id );
 LIBNETSTREAM_API int32_t netstream_recv( netstream_t _net_stream, NetStreamPacket& _packet );
 LIBNETSTREAM_API int32_t netstream_send( netstream_t _net_stream, NetConnId _conn_id, const void* _data, uint32_t _size );
+LIBNETSTREAM_API const char* netstream_remote_ip( netstream_t _net_stream, NetConnId _conn_id );
+LIBNETSTREAM_API int32_t netstream_remote_port( netstream_t _net_stream, NetConnId _conn_id );
 LIBNETSTREAM_API void netstream_free_packet( NetStreamPacket* _packet );
 LIBNETSTREAM_API void netstream_destroy( netstream_t _net_stream );
 

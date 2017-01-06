@@ -73,6 +73,16 @@ int32_t netstream_send( netstream_t _net_stream, NetConnId _conn_id, const void*
 	return _net_stream->SendNetMessage( _conn_id, _data, _size );
 }
 
+const char* netstream_remote_ip( netstream_t _net_stream, NetConnId _conn_id )
+{
+	return _net_stream->GetRemoteIp( _conn_id );
+}
+
+int32_t netstream_remote_port( netstream_t _net_stream, NetConnId _conn_id )
+{
+	return _net_stream->GetRemotePort( _conn_id );
+}
+
 void netstream_destroy( netstream_t _net_stream )
 {
 	_net_stream->Shutdown();
@@ -203,6 +213,22 @@ int32_t NetStream::SendNetMessage( NetConnId _conn_id, const void* _data, uint32
 		return -1;
 	connection->GetNetPeer()->SendMsg( _conn_id, _data, _size );
 	return 0;
+}
+
+const char* NetStream::GetRemoteIp( NetConnId _conn_id )
+{
+	CNetConnectionPtr connection;
+	if( !GetConnection( _conn_id, connection ) )
+		return "";
+	return connection->GetRemoteIp();
+}
+
+int32_t NetStream::GetRemotePort( NetConnId _conn_id )
+{
+	CNetConnectionPtr connection;
+	if( !GetConnection( _conn_id, connection ) )
+		return 0;
+	return connection->GetRemotePort();
 }
 
 bool NetStream::AddConnection( NetConnection* _conn )

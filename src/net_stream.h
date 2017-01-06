@@ -27,6 +27,8 @@ public:
 	void AddNetPacket( const NetStreamPacket& _packet );
 	int32_t GetNetPacket( NetStreamPacket& _packet );
 	int32_t SendNetMessage( NetConnId _conn_id, const void* _data, uint32_t _size );
+	const char* GetRemoteIp( NetConnId _conn_id );
+	int32_t GetRemotePort( NetConnId _conn_id );
 	bool AddConnection( NetConnection* _conn );
 	void DelConnection( NetConnId _conn_id );
 	bool GetConnection( NetConnId _conn_id, CNetConnectionPtr& _conn );

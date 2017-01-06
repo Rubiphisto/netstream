@@ -392,8 +392,8 @@ void thread_func()
 			all_connections.push_back( packet.net_conn_id );
 			printf( "A new connection[%" PRIu64"] which come from %s %" PRIu32 " has arrived.\n"
 				, packet.net_conn_id
-				, ( (NetStreamAddress*)packet.data )->address
-				, ( (NetStreamAddress*)packet.data )->port );
+				, netstream_remote_ip( netstream, packet.net_conn_id )
+				, netstream_remote_port( netstream, packet.net_conn_id ) );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
 			all_connections.remove_if(
@@ -404,8 +404,8 @@ void thread_func()
 			);
 			printf( "A connection[%" PRIu64"] which come from %s %" PRIu32" has lost.\n"
 				, packet.net_conn_id
-				, ( (NetStreamAddress*)packet.data )->address
-				, ( (NetStreamAddress*)packet.data )->port );
+				, netstream_remote_ip( netstream, packet.net_conn_id )
+				, netstream_remote_port( netstream, packet.net_conn_id ) );
 			break;
 		case MESSAGE_TYPE_MESSAGE:
 			OnRecvMessage( netstream, packet );

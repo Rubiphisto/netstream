@@ -83,14 +83,14 @@ void thread_func()
 		case MESSAGE_TYPE_CONNECTED:
 			conn_id = packet.net_conn_id;
 			printf( "Connected to server %s %" PRId32", I'm [%" PRIu64"]\n"
-				, ( (NetStreamAddress*)packet.data )->address
-				, ( (NetStreamAddress*)packet.data )->port
+				, netstream_remote_ip( netstream, conn_id )
+				, netstream_remote_port( netstream, conn_id )
 				, conn_id );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
 			printf( "Disconnected from server %s %" PRId32", I'm [%" PRIu64"]\n"
-				, ( (NetStreamAddress*)packet.data )->address
-				, ( (NetStreamAddress*)packet.data )->port
+				, netstream_remote_ip( netstream, conn_id )
+				, netstream_remote_port( netstream, conn_id )
 				, conn_id );
 			conn_id = 0;
 			break;
