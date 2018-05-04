@@ -22,7 +22,7 @@ find_library(LibEvent_LIB_Pthreads NAMES event_pthreads PATHS ${LibEvent_Build})
 
 if (LibEvent_LIB_Basis AND LibEvent_INCLUDE_DIR)
 	set(LibEvent_FOUND TRUE)
-	set(LibEvent_LIBRARIES ${LibEvent_LIB_Basis} ${LibEvent_LIB_Core} ${LibEvent_LIB_Extras} ${LibEvent_LIB_Pthreads} )
+	set(LibEvent_LIBRARIES ${LibEvent_LIB_Basis} ${LibEvent_LIB_Core} ${LibEvent_LIB_Extras} )
 	if (LibEvent_LIB_Pthreads)
  	 	set(LibEvent_LIBRARIES ${LibEvent_LIBRARIES} ${LibEvent_LIB_Pthreads} )
  	endif()
@@ -45,7 +45,6 @@ if( MSVC )
 		LibEvent_LIB_Basis
 		LibEvent_LIB_Core
 		LibEvent_LIB_Extras
-		LibEvent_LIB_Pthreads
 	)
 else()
 	mark_as_advanced(
