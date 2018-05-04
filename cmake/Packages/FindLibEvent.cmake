@@ -18,10 +18,11 @@ endif()
 find_library(LibEvent_LIB_Basis NAMES event PATHS ${LibEvent_Build})
 find_library(LibEvent_LIB_Core NAMES event_core PATHS ${LibEvent_Build})
 find_library(LibEvent_LIB_Extras NAMES event_extra PATHS ${LibEvent_Build})
+find_library(LibEvent_LIB_Pthreads NAMES event_pthreads PATHS ${LibEvent_Build})
 
 if (LibEvent_LIB_Basis AND LibEvent_INCLUDE_DIR)
 	set(LibEvent_FOUND TRUE)
-	set(LibEvent_LIBRARIES ${LibEvent_LIB_Basis} ${LibEvent_LIB_Core} ${LibEvent_LIB_Extras} )
+	set(LibEvent_LIBRARIES ${LibEvent_LIB_Basis} ${LibEvent_LIB_Core} ${LibEvent_LIB_Extras} ${LibEvent_LIB_Pthreads} )
 	set(LibEvent_INCLUDE_DIRS ${LibEvent_INCLUDE_DIR})
 else ()
 	set(LibEvent_FOUND FALSE)
@@ -41,6 +42,7 @@ if( MSVC )
 		LibEvent_LIB_Basis
 		LibEvent_LIB_Core
 		LibEvent_LIB_Extras
+		LibEvent_LIB_Pthreads
 	)
 else()
 	mark_as_advanced(
