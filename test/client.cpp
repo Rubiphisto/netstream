@@ -5,6 +5,7 @@
 #include <string>
 #include <mutex>
 #include <string.h>
+#include <cinttypes>
 #include "libnetstream.h"
 
 #if defined( _WINDOWS )
@@ -15,6 +16,8 @@
 
 bool g_running = true;
 bool g_close_connection = false;
+std::string g_address;
+int32_t g_port;
 std::mutex g_list_mutex;
 std::queue<std::string> g_sending_list;
 
@@ -44,14 +47,14 @@ void OnRecvMessage( const NetStreamPacket _packet )
 	};
 	ChatMessage* message = (ChatMessage*)_packet.data;
 	//printf( "[%u] said: %s\n", message->user_id, message->content );
-	printf( "[%llu,%llu,%u] say : %s\n", message->user_id, strlen( message->content ), _packet.data_size, message->content );
+	printf( "[%" PRIu64",%" PRIu64",%" PRIu32"] say : %s\n", message->user_id, strlen( message->content ), _packet.data_size, message->content );
 }
 
 void thread_func()
 {
 	printf( "enter thread!\n" );
 	netstream_t netstream = netstream_create( nullptr, nullptr, 0 );
-	NetPeerId peer_id = netstream_connect( netstream, "127.0.0.1", 7000 );
+	NetPeerId peer_id = netstream_connect( netstream, g_address.c_str(), g_port );
 	if( 0 == peer_id )
 		return;
 	NetConnId conn_id = 0;
@@ -79,10 +82,16 @@ void thread_func()
 		{
 		case MESSAGE_TYPE_CONNECTED:
 			conn_id = packet.net_conn_id;
-			printf( "Connected to server, I'm [%llu]\n", conn_id );
+			printf( "Connected to server %s %" PRId32", I'm [%" PRIu64"]\n"
+				, netstream_remote_ip( netstream, conn_id )
+				, netstream_remote_port( netstream, conn_id )
+				, conn_id );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
-			printf( "Disconnected from server, I'm [%llu]\n", conn_id );
+			printf( "Disconnected from server %s %" PRId32", I'm [%" PRIu64"]\n"
+				, netstream_remote_ip( netstream, conn_id )
+				, netstream_remote_port( netstream, conn_id )
+				, conn_id );
 			conn_id = 0;
 			break;
 		case MESSAGE_TYPE_MESSAGE:
@@ -98,6 +107,13 @@ void thread_func()
 
 int main( int32_t argc, char* argv[] )
 {
+	if( argc != 3 )
+	{
+		printf( "%s <ipv4 or ipv6 address> <remote port>\n", argv[0] );
+		return -1;
+	}
+	g_address = argv[1];
+	g_port = atoi( argv[2] );
 	std::thread m( thread_func );
 	char line_buffer[MAX_CHAT_CONTENT];
 	while( true )

@@ -22,6 +22,14 @@ public:
 		return m_net_peer;
 	}
 	int32_t WriteData( evbuffer* _buff );
+	const char* GetRemoteIp() const
+	{
+		return m_endpoint_address.address;
+	}
+	int32_t GetRemotePort() const
+	{
+		return m_endpoint_address.port;
+	}
 
 	// property
 	NetConnId get_net_conn_id() const
@@ -52,5 +60,6 @@ private:
 	bool					m_closing;
 	bufferevent*			m_buffer_event;
 	NetConnId				m_conn_id;
+	NetStreamAddress		m_endpoint_address;
 };
 

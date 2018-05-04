@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "net_connection.h"
 
+#ifdef WIN32
+#include <Ws2ipdef.h>
+#endif
+
 #include <event2/bufferevent.h>
 
 #include "net_peer.h"
@@ -12,6 +16,7 @@ NetConnection::NetConnection()
 	, m_buffer_event( nullptr )
 	, m_conn_id( 0 )
 {
+	memset( &m_endpoint_address, 0, sizeof( NetStreamAddress ) );
 }
 
 NetConnection::~NetConnection()
@@ -75,6 +80,29 @@ void NetConnection::_onDestroyConnection()
 void NetConnection::CreateConnection()
 {
 	m_net_peer->get_net_stream()->AddConnection( this );
+
+	// fill address
+	memset( &m_endpoint_address, 0, sizeof( NetStreamAddress ) );
+	evutil_socket_t fd = bufferevent_getfd( m_buffer_event );
+	if( -1 != fd )
+	{
+		sockaddr_storage ss;
+		ev_socklen_t len = ( ev_socklen_t )sizeof( sockaddr_storage );
+		if( 0 ==  getpeername( bufferevent_getfd( m_buffer_event ), (sockaddr*)&ss, &len ) )
+		{
+			switch( ss.ss_family )
+			{
+			case AF_INET:
+				evutil_inet_ntop( ss.ss_family, &( (sockaddr_in*)&ss )->sin_addr, m_endpoint_address.address, ADDRESS_LENGTH );
+				m_endpoint_address.port = ( (sockaddr_in*)&ss )->sin_port;
+				break;
+			case AF_INET6:
+				evutil_inet_ntop( ss.ss_family, &( (sockaddr_in6*)&ss )->sin6_addr, m_endpoint_address.address, ADDRESS_LENGTH );
+				m_endpoint_address.port = ( (sockaddr_in6*)&ss )->sin6_port;
+				break;
+			}
+		}
+	}
 	_onCreateConnection();
 }
 

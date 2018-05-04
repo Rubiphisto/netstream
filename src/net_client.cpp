@@ -32,7 +32,7 @@ bool NetClient::_startService()
 		delete conn;
 		return false;
 	}
-	if( 0 != bufferevent_socket_connect_hostname( conn->get_buffer_event(), nullptr, AF_INET, m_address.c_str(), m_port ) )
+	if( 0 != bufferevent_socket_connect_hostname( conn->get_buffer_event(), nullptr, AF_UNSPEC, m_address.c_str(), m_port ) )
 	{
 		delete conn;
 		return false;

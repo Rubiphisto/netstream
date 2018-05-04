@@ -35,6 +35,8 @@ const uint8_t MESSAGE_TYPE_MESSAGE = 1;
 const uint8_t MESSAGE_TYPE_DISCONNECTED = 2;
 const uint8_t MESSAGE_TYPE_ERRORMSG = 3;
 
+const int32_t ADDRESS_LENGTH = 128;
+
 struct NetStreamPacket
 {
 	uint8_t		packet_type;
@@ -42,6 +44,12 @@ struct NetStreamPacket
 	NetConnId	net_conn_id;
 	uint32_t	data_size;
 	uint8_t*	data;
+};
+
+struct NetStreamAddress
+{
+	char address[ADDRESS_LENGTH];
+	int32_t port;
 };
 
 typedef void( *PacketArrivedHandler )( netstream_t, const NetStreamPacket&, uint64_t );
@@ -54,6 +62,8 @@ LIBNETSTREAM_API bool netstream_disconnect( netstream_t _net_stream, NetConnId _
 LIBNETSTREAM_API bool netstream_close( netstream_t _net_stream, NetPeerId _peer_id );
 LIBNETSTREAM_API int32_t netstream_recv( netstream_t _net_stream, NetStreamPacket& _packet );
 LIBNETSTREAM_API int32_t netstream_send( netstream_t _net_stream, NetConnId _conn_id, const void* _data, uint32_t _size );
+LIBNETSTREAM_API const char* netstream_remote_ip( netstream_t _net_stream, NetConnId _conn_id );
+LIBNETSTREAM_API int32_t netstream_remote_port( netstream_t _net_stream, NetConnId _conn_id );
 LIBNETSTREAM_API void netstream_free_packet( NetStreamPacket* _packet );
 LIBNETSTREAM_API void netstream_destroy( netstream_t _net_stream );
 

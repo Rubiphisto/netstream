@@ -1,6 +1,6 @@
-cmake_minimum_required (VERSION 2.8.9)
+﻿cmake_minimum_required (VERSION 2.8.9)
 
-project(NETSTREAM CXX)
+project( NETSTREAM CXX )
 
 if( NETSTREAM_NO_SHARED_LIB )
 	message( STATUS "Build netstream as static library.")
@@ -32,11 +32,14 @@ if( NOT INCLUDE_INSTALL_DIR )
 endif()
 
 # Include necessary submodules
-set(CMAKE_MODULE_PATH
+set( CMAKE_MODULE_PATH
 	"${NETSTREAM_SOURCE_DIR}/cmake"
+	"${NETSTREAM_SOURCE_DIR}/cmake/utils"
 	"${NETSTREAM_SOURCE_DIR}/cmake/Packages"
 )
 
-add_subdirectory(src)
-add_subdirectory(test)
+include( project_config )
+
+add_subdirectory( src )
+add_subdirectory( test )
 

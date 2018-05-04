@@ -1,19 +1,14 @@
-set (HEADER_FILES
-	stdafx.h
-	${CMAKE_SOURCE_DIR}/include/libnetstream.h
-	net_stream.h
-	net_peer.h
-	net_server.h
-	net_client.h
-	net_connection.h
-	message_list.h
-)
-set (SOURCE_FILES
-	net_stream.cpp
-	net_peer.cpp
-	net_server.cpp
-	net_client.cpp
-	net_connection.cpp
-	message_list.cpp
-)
-
+﻿netstream_add_source( basis stdafx.h )
+netstream_add_source( basis ../include/libnetstream.h )
+netstream_add_source( basis  net_stream.h)
+netstream_add_source( basis  net_stream.cpp)
+netstream_add_source( network net_peer.h )
+netstream_add_source( network net_peer.cpp )
+netstream_add_source( network net_server.h )
+netstream_add_source( network net_server.cpp )
+netstream_add_source( network net_client.h )
+netstream_add_source( network net_client.cpp )
+netstream_add_source( network net_connection.h )
+netstream_add_source( network net_connection.cpp )
+netstream_add_source( messages message_list.h )
+netstream_add_source( messages message_list.cpp )

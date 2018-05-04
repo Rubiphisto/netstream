@@ -8,6 +8,7 @@
 #include <queue>
 #include <string>
 #include <mutex>
+#include <cinttypes>
 #include "libnetstream.h"
 
 #if defined( _WINDOWS )
@@ -16,6 +17,8 @@
 
 bool g_running = true;
 bool g_close_connection = false;
+std::string g_address;
+int32_t g_port;
 std::list<NetConnId> all_connections;
 std::mutex g_list_mutex;
 std::queue<std::string> g_sending_list;
@@ -336,7 +339,7 @@ void thread_func()
 {
 	printf( "enter thread!\n" );
 	netstream_t netstream = netstream_create( nullptr, nullptr, 0 );
-	NetPeerId peer_id = netstream_listen( netstream, "", 7000 );
+	NetPeerId peer_id = netstream_listen( netstream, g_address.c_str(), g_port );
 	if( 0 == peer_id )
 		return;
 	while( g_running )
@@ -387,7 +390,10 @@ void thread_func()
 		{
 		case MESSAGE_TYPE_CONNECTED:
 			all_connections.push_back( packet.net_conn_id );
-			printf( "A new connection[%llu] has arrived.\n", packet.net_conn_id );
+			printf( "A new connection[%" PRIu64"] which come from %s %" PRIu32 " has arrived.\n"
+				, packet.net_conn_id
+				, netstream_remote_ip( netstream, packet.net_conn_id )
+				, netstream_remote_port( netstream, packet.net_conn_id ) );
 			break;
 		case MESSAGE_TYPE_DISCONNECTED:
 			all_connections.remove_if(
@@ -396,7 +402,10 @@ void thread_func()
 				return _conn_id == packet.net_conn_id;
 			}
 			);
-			printf( "A connection[%llu] has lost.\n", packet.net_conn_id );
+			printf( "A connection[%" PRIu64"] which come from %s %" PRIu32" has lost.\n"
+				, packet.net_conn_id
+				, netstream_remote_ip( netstream, packet.net_conn_id )
+				, netstream_remote_port( netstream, packet.net_conn_id ) );
 			break;
 		case MESSAGE_TYPE_MESSAGE:
 			OnRecvMessage( netstream, packet );
@@ -412,6 +421,13 @@ void thread_func()
 
 int main( int32_t argc, char* argv[] )
 {
+	if( argc != 3 )
+	{
+		printf( "%s <ipv4 or ipv6 address> <listen port>\n", argv[0] );
+		return -1;
+	}
+	g_address = argv[1];
+	g_port = atoi( argv[2] );
 	std::thread m( thread_func );
 	char line_buffer[MAX_CHAT_CONTENT];
 	while( true )
