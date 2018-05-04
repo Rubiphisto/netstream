@@ -95,6 +95,7 @@ bool NetPeer::_startServiceInternal()
 	{
 		std::lock_guard<std::mutex> lock( m_action_event_mutex );
 		m_action_event = event_new( m_event_base, -1, 0, action_cb, this );
+		event_active( m_action_event, 0, 0 );
 	}
 	return true;
 }
